@@ -171,8 +171,7 @@ float3x3 XYZ_to_D50 = float3x3 (
 
 	color = mul(m_in,color);
 	color = mul(m_out,color);
-	
-	color = clamp(color, 0.0, 1.0);
+	color = clamp(color, 0.000000, 1.0);
 	
 	float r = 1.0/p;
 	color = pow(color, float3(r,r,r));	
@@ -183,9 +182,11 @@ float3x3 XYZ_to_D50 = float3x3 (
 
 	float3 warmer = mul(transpose(D50_to_XYZ),color);
 	warmer = mul(transpose(XYZ_to_D65),warmer);
+	warmer = clamp(warmer, 0.000000, 1.0);	
 	
 	float3 cooler = mul(transpose(D65_to_XYZ),color);
 	cooler = mul(transpose(XYZ_to_D50),cooler);
+	cooler = clamp(cooler, 0.000000, 1.0);	
 	
 	float m = abs(WP);
 	
