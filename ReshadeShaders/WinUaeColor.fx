@@ -59,6 +59,12 @@ float contr( float3 c)
 	mxc = lerp(mx, mxc, contrast);
 	return mxc/(mx+0.00001);
 }
+
+float3 plant (float3 tar, float r)
+{
+	float t = max(max(tar.r,tar.g),tar.b) + 0.00001;
+	return tar * r / t;
+}
  
 float4 WUColor(float4 pos : SV_Position, float2 uv : TexCoord) : SV_Target
 {
@@ -198,11 +204,11 @@ float3x3 XYZ_to_D50 = float3x3 (
 	
 	color*=contr(color);
 
-	float l = length(color);
-	color.r = pow(color.r + 1e-5, saturation);
-	color.g = pow(color.g + 1e-5, saturation);
-	color.b = pow(color.b + 1e-5, saturation);	
-	color = normalize(color)*l;	
+	color = clamp(color, 0.0, 1.0);
+	float3 scolor1 = plant(pow(color, float3(saturation, saturation, saturation)), max(max(color.r,color.g),color.b));
+	float luma = dot(color, float3(0.299, 0.587, 0.114));
+	float3 scolor2 = lerp(float3(luma, luma, luma), color, saturation);
+	color = (saturation > 1.0) ? scolor1 : scolor2; 
 	
 	return float4(color,w);
 }
