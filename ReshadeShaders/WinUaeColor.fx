@@ -156,6 +156,11 @@ float3x3 XYZ_to_D50 = float3x3 (
 	float3 c   = tex2D(ReShade::BackBuffer, uv      ).rgb;
 	float  w   = tex2D(ReShade::BackBuffer, uv      ).a;
 
+	float3 scolor1 = plant(pow(c, float3(saturation, saturation, saturation)), max(max(c.r,c.g),c.b));
+	float luma = dot(c, float3(0.299, 0.587, 0.114));
+	float3 scolor2 = lerp(float3(luma, luma, luma), c, saturation);
+	c = (saturation > 1.0) ? scolor1 : scolor2;
+
 	float p;
 	float3x3 m_out = ToSRGB;
 	
@@ -177,7 +182,7 @@ float3x3 XYZ_to_D50 = float3x3 (
 
 	color = mul(m_in,color);
 	color = mul(m_out,color);
-	color = clamp(color, 0.000000, 1.0);
+	color = clamp(color, 0.0, 1.0);
 	
 	float r = 1.0/p;
 	color = pow(color, float3(r,r,r));	
@@ -185,6 +190,7 @@ float3x3 XYZ_to_D50 = float3x3 (
 	if (CP == -1.0) color = c;
 
 	color = pow(color, float3(1.0,1.0,1.0)*2.4);
+
 
 	float3 warmer = mul(transpose(D50_to_XYZ),color);
 	warmer = mul(transpose(XYZ_to_D65),warmer);
@@ -201,14 +207,9 @@ float3x3 XYZ_to_D50 = float3x3 (
 	color = lerp(color, comp, m); 
 
 	color = pow(color, float3(1.0,1.0,1.0)/2.4);
+	color = clamp(color, 0.0, 1.0);
 	
 	color*=contr(color);
-
-	color = clamp(color, 0.0, 1.0);
-	float3 scolor1 = plant(pow(color, float3(saturation, saturation, saturation)), max(max(color.r,color.g),color.b));
-	float luma = dot(color, float3(0.299, 0.587, 0.114));
-	float3 scolor2 = lerp(float3(luma, luma, luma), color, saturation);
-	color = (saturation > 1.0) ? scolor1 : scolor2; 
 	
 	return float4(color,w);
 }
