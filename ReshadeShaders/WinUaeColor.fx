@@ -52,6 +52,12 @@ uniform float contrast < __UNIFORM_SLIDER_FLOAT1
 	ui_tooltip = "Color Contrast";
 > = 0.0;
 
+uniform float brightness < __UNIFORM_SLIDER_FLOAT1
+	ui_min = 0.0; ui_max = 3.0;
+	ui_label = "Color Brightness";
+	ui_tooltip = "Color Brightness";
+> = 1.0;
+
 float contr( float3 c)
 {
 	float mx = max(max(c.r,c.g),c.b);
@@ -211,7 +217,7 @@ float3x3 XYZ_to_D50 = float3x3 (
 	
 	color*=contr(color);
 	
-	return float4(color,w);
+	return float4(clamp(color*brightness, 0.0, 1.0),w);
 }
 
 technique WinUaeColor
