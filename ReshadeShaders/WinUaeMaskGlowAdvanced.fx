@@ -166,6 +166,50 @@ uniform float wclip < __UNIFORM_SLIDER_FLOAT1
 	ui_tooltip = "Scanline preservation w. Bloom";
 > = 0.5;
 
+uniform float decons < __UNIFORM_SLIDER_FLOAT1
+	ui_min = 0.0; ui_max = 2.0;
+	ui_label = "Deconvergence Strength";
+	ui_tooltip = "Deconvergence Strength";
+> = 1.0;
+
+
+uniform float deconrr < __UNIFORM_SLIDER_FLOAT1
+	ui_min = -8.0; ui_max = 8.0;
+	ui_label = "Deconvergence Red Horizontal";
+	ui_tooltip = "Deconvergence Red Horizontal";
+> = 0.0;
+
+uniform float deconrg < __UNIFORM_SLIDER_FLOAT1
+	ui_min = -8.0; ui_max = 8.0;
+	ui_label = "Deconvergence Green Horizontal";
+	ui_tooltip = "Deconvergence Green Horizontal";
+> = 0.0;
+
+uniform float deconrb < __UNIFORM_SLIDER_FLOAT1
+	ui_min = -8.0; ui_max = 8.0;
+	ui_label = "Deconvergence Blue Horizontal";
+	ui_tooltip = "Deconvergence Blue Horizontal";
+> = 0.0;
+
+uniform float deconrry < __UNIFORM_SLIDER_FLOAT1
+	ui_min = -8.0; ui_max = 8.0;
+	ui_label = "Deconvergence Red Vertical";
+	ui_tooltip = "Deconvergence Red Vertical";
+> = 0.0;
+
+uniform float deconrgy < __UNIFORM_SLIDER_FLOAT1
+	ui_min = -8.0; ui_max = 8.0;
+	ui_label = "Deconvergence Green Vertical";
+	ui_tooltip = "Deconvergence Green Vertical";
+> = 0.0;
+
+uniform float deconrby < __UNIFORM_SLIDER_FLOAT1
+	ui_min = -8.0; ui_max = 8.0;
+	ui_label = "Deconvergence Blue Vertical";
+	ui_tooltip = "Deconvergence Blue Vertical";
+> = 0.0;
+
+
 texture Shinra01L  { Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; Format = RGBA16F; };
 sampler Shinra01SL { Texture = Shinra01L; MinFilter = Linear; MagFilter = Linear; }; 
 
@@ -443,6 +487,40 @@ float corner(float2 pos) {
 	return sqrt(res.x*res.y);
 } 
 
+
+void fetch_pixel (inout float3 c, inout float3 b, float2 coord, float2 bcoord)
+{
+		float stepx = ReShade::PixelSize.x;
+		float stepy = ReShade::PixelSize.y;
+		
+		float ds = decons;
+				
+		float2 dx = float2(stepx, 0.0);
+		float2 dy = float2(0.0, stepy);		
+		
+		float posx = 2.0*coord.x - 1.0;
+		float posy = 2.0*coord.y - 1.0;
+
+		float2 rc = deconrr * dx + deconrry*dy;
+		float2 gc = deconrg * dx + deconrgy*dy;
+		float2 bc = deconrb * dx + deconrby*dy;		
+
+		float r1 = tex2D(Shinra01SL, coord + rc).r;
+		float g1 = tex2D(Shinra01SL, coord + gc).g;
+		float b1 = tex2D(Shinra01SL, coord + bc).b;
+
+		float3 d = float3(r1, g1, b1);
+		c = clamp(lerp(c, d, ds), 0.0, 1.0);
+		
+		r1 = tex2D(Shinra03SL, bcoord + rc).r;
+		g1 = tex2D(Shinra03SL, bcoord + gc).g;
+		b1 = tex2D(Shinra03SL, bcoord + bc).b;
+
+		d = float3(r1, g1, b1);
+		b = clamp(lerp(b, d, ds), 0.0, 1.0);
+}
+
+
 float3 WMASK(float4 pos : SV_Position, float2 uv : TexCoord) : SV_Target
 {	
 	
@@ -454,6 +532,9 @@ float3 WMASK(float4 pos : SV_Position, float2 uv : TexCoord) : SV_Target
 	float3 color  = tex2D(Shinra01SL, coord).rgb;
 	float3 color1 = tex2D(Shinra01SL, coord + dx).rgb;	
 	float3 b11 = tex2D(Shinra03SL, coord).rgb;
+
+	fetch_pixel(color, b11, coord, coord); 
+
 	float3 mcolor = max(max(color0,color),color1);
 	float mx = max(max(mcolor.r, mcolor.g), mcolor.b);
 	mx = pow(mx, 1.4/MaskGamma);
