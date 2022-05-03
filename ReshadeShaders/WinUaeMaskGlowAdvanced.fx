@@ -543,6 +543,8 @@ float3 WMASK(float4 pos : SV_Position, float2 uv : TexCoord) : SV_Target
 	
 	float3 cmask = Mask(pos1, mx);
 	
+	if (mask_layout > 0.5) cmask = cmask.rbg;
+ 	
 	float3 orig1 = color; float3 one = float3(1.0,1.0,1.0);
 	
 	color*=cmask;
