@@ -81,6 +81,12 @@ uniform float bloom < __UNIFORM_SLIDER_FLOAT1
 	ui_tooltip = "Bloom Strength";
 > = 0.0;
 
+uniform float halation < __UNIFORM_SLIDER_FLOAT1
+	ui_min = 0.0; ui_max = 1.0;
+	ui_label = "Halation Strength";
+	ui_tooltip = "Halation Strength";
+> = 0.0;
+
 uniform float glow < __UNIFORM_SLIDER_FLOAT1
 	ui_min = 0.0; ui_max = 0.25;
 	ui_label = "Glow Strength";
@@ -112,7 +118,7 @@ sampler Shinra03SL { Texture = Shinra03L; MinFilter = Linear; MagFilter = Linear
 
 float4 PASS_SH0(float4 pos : SV_Position, float2 uv : TexCoord) : SV_Target
 {
-	float4 color = tex2D(ReShade::BackBuffer, uv);
+	float4 color = min(tex2D(ReShade::BackBuffer, uv),1.0);
 	return float4 (pow(color.rgb, float3(1.0, 1.0, 1.0) * MaskGamma),1.0);
 }
 
@@ -330,13 +336,17 @@ float3 declip(float3 c, float b)
 
 float3 WMASK(float4 pos : SV_Position, float2 uv : TexCoord) : SV_Target
 {	
-	float w3 = tex2D(ReShade::BackBuffer, uv).a; if (w3 == 0.0) w3 = 1.0;
-	float3 color = tex2D(Shinra01SL, uv).rgb;
+	float w3 = min(tex2D(ReShade::BackBuffer, uv).a, 1.0); if (w3 == 0.0) w3 = 1.0;
+	float2 dx = float2(ReShade::PixelSize.x, 0.0);
+	float3 color0 = tex2D(Shinra01SL, uv - dx).rgb;
+	float3 color  = tex2D(Shinra01SL, uv).rgb;
+	float3 color1 = tex2D(Shinra01SL, uv + dx).rgb;	
 	float3 b11 = tex2D(Shinra03SL, uv).rgb;
+	float3 mcolor = (color0+color+color1)/3.0;
 	
 	float2 pos1 = floor(uv/ReShade::PixelSize);
 	
-	float3 cmask = Mask(pos1, pow(color, float3(1.0,1.0,1.0)/MaskGamma));
+	float3 cmask = Mask(pos1, pow(mcolor, float3(1.0,1.0,1.0)/MaskGamma));
 	
 	float3 orig1 = color; float3 one = float3(1.0,1.0,1.0);
 	
@@ -348,7 +358,7 @@ float3 WMASK(float4 pos : SV_Position, float2 uv : TexCoord) : SV_Target
 	
 	color = min(color, 1.0);
 	
-	color*=SlotMask(pos1, color);
+	color*=SlotMask(pos1, mcolor);
 
 	float3 Bloom1 = 2.0*b11*b11;
 	Bloom1 = min(Bloom1, 0.75);
@@ -368,7 +378,15 @@ float3 WMASK(float4 pos : SV_Position, float2 uv : TexCoord) : SV_Target
 	color = declip(color, pow(w3,wclip));
 	
 	color = min(color, lerp(min(cmask,1.0),one,0.5));
-	
+
+	float maxb = max(max(b11.r,b11.g),b11.b);
+	maxb = sqrt(maxb);
+	float3 Bloom = b11;
+	float colmx = max(max(orig1.r,orig1.g),orig1.b)/w3;
+
+	Bloom = lerp(0.5*(Bloom + Bloom*Bloom), Bloom*Bloom, colmx);	
+	color = color + (0.75+maxb)*Bloom*(0.75 + 0.70*pow(colmx,0.33333))*lerp(1.0,w3,0.5*colmx)*lerp(one,cmask,0.35 + 0.4*maxb)*halation; 
+
 	color = pow(color, float3(1.0,1.0,1.0)/MaskGamma);
 	
 	return color;

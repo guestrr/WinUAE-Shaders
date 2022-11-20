@@ -223,6 +223,7 @@ sampler Shinra03SL { Texture = Shinra03L; MinFilter = Linear; MagFilter = Linear
 float4 PASS_SH0(float4 pos : SV_Position, float2 uv : TexCoord) : SV_Target
 {
 	float4 color = tex2D(ReShade::BackBuffer, uv);
+	color = min(color, 1.0);
 	return float4 (pow(color.rgb, float3(1.0, 1.0, 1.0) * MaskGamma),1.0);
 }
 
@@ -526,7 +527,7 @@ float3 WMASK(float4 pos : SV_Position, float2 uv : TexCoord) : SV_Target
 	
 	float2 coord = Warp(uv);
 	
-	float w3 = tex2D(ReShade::BackBuffer, coord).a; if (w3 == 0.0) w3 = 1.0;
+	float w3 = min(tex2D(ReShade::BackBuffer, coord).a, 1.0); if (w3 == 0.0) w3 = 1.0;
 	float2 dx = float2(0.00075, 0.0);
 	float3 color0 = tex2D(Shinra01SL, coord - dx).rgb;
 	float3 color  = tex2D(Shinra01SL, coord).rgb;
