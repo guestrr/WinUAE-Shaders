@@ -77,7 +77,7 @@ out_vertex  DDT_VERTEX(float3 position : POSITION, float2 texCoord : TEXCOORD0 )
 { 
 	out_vertex OUT = (out_vertex)0;
 	OUT.position = mul(float4(position,1.0),WorldViewProjection);
-	OUT.t0 = texCoord;
+	OUT.t0 = texCoord * 1.00001;
 	return OUT;  
 }
 
@@ -89,7 +89,7 @@ float4 DDT_FRAGMENT ( in out_vertex VAR ) : COLOR
 	float2 tmp = (ir.x < 1.0) ? float2(1.0,1.0) : ir;
 	float2 ps = ps1*tmp;
 
-	float2 coord=VAR.t0;
+	float2 coord = (floor(VAR.t0/ps) + 0.5)*ps;
 
 	float2 pos = frac(VAR.t0/ps)-float2(0.5, 0.5); // pos = pixel position
 	float2 dir = sign(pos); // dir = pixel direction
