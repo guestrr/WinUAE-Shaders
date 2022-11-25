@@ -123,10 +123,10 @@ float4 PS_FRAGMENT (in out_vertex VAR) : COLOR
 	wr1*=wr1; wr1 = exp2(-h_sharp*wr1);	float sr1 = wr1;
 	wr2*=wr2; wr2 = exp2(-h_sharp*wr2);	float sr2 = wr2;
 
-	wl2 = max(wl2 - zero, lerp(0.0,lerp(-0.14, -0.005, fp.x),float(cubic > 0.05)));
+	wl2 = max(wl2 - zero, lerp(0.0,lerp(-0.15, -0.00, fp.x),float(cubic > 0.05)));
 	wl1 = max(wl1 - zero, 0.0);
 	wr1 = max(wr1 - zero, 0.0);	
-	wr2 = max(wr2 - zero, lerp(0.0,lerp(-0.14, -0.005, 1.-fp.x),float(cubic > 0.05)));
+	wr2 = max(wr2 - zero, lerp(0.0,lerp(-0.15, -0.00, 1.-fp.x),float(cubic > 0.05)));
 
 	float wtt =  1.0/(wl2+wl1+wr1+wr2);
 	float wts =  1.0/(sl2+sl1+sr1+sr2);
@@ -192,8 +192,8 @@ float4 PS_FRAGMENT (in out_vertex VAR) : COLOR
 	color1*=lerp(brightboost1, brightboost2, max(max(color1.r,color1.g),color1.b));
 	color2*=lerp(brightboost1, brightboost2, max(max(color2.r,color2.g),color2.b));
 
-	color1 = min(color1, 1.05);
-	color2 = min(color2, 1.05);
+	color1 = saturate(color1);
+	color2 = saturate(color2);
 
 	color = w1*color1 + w2*color2;
 	float3 w3 = w1 + w2;

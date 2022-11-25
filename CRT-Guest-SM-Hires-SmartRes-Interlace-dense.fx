@@ -215,14 +215,14 @@ float4 PS_FRAGMENT (in out_vertex VAR) : COLOR
 	float3 w3 = w1+w2;
 	
 	// if(ir.y > 1.0) color = (w1+w2)*color1;
-	color = min(color,1.0);	
+	color = saturate(color);	
 	
 	float3 color1g = pow(color, float3(1.0,1.0,1.0)/2.1);
 
 	if (!(stype == 1.0))
 	{
 		float3 color2g = pow(color, float3(1.0,1.0,1.0)/gamma_out);			
-		float mx1 = max(max(color1g.r,color1g.g),color1g.b) + 1e-12;	
+		float mx1 = max(max(max(color1g.r,color1g.g),color1g.b), 1e-8);
 		float mx2 = max(max(color2g.r,color2g.g),color2g.b);
 		color1g*=mx2/mx1;		
 	}

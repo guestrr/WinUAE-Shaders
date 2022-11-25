@@ -124,8 +124,8 @@ float4 PS_FRAGMENT (in out_vertex VAR) : COLOR
 	color1*=lerp(brightboost1, brightboost2, max(max(color1.r,color1.g),color1.b));
 	color2*=lerp(brightboost1, brightboost2, max(max(color2.r,color2.g),color2.b));
 
-	color1 = min(color1, 1.05);
-	color2 = min(color2, 1.05);
+	color1 = saturate(color1);
+	color2 = saturate(color2);
 
 	float3 w1 = sw(f,color1);
 	float3 w2 = sw(1.0-f,color2);

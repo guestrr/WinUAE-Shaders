@@ -133,14 +133,14 @@ float4 PS_FRAGMENT (in out_vertex VAR) : COLOR
 	wr3*=wr3; wr3 = exp2(-h_sharp*wr3);	float sr3 = wr3;
 	wr4*=wr4; wr4 = exp2(-h_sharp*wr4);	float sr4 = wr4;	
 
-	wl4 = max(wl4 - zero, lerp(0.0,lerp(-0.10, -0.010, fp1),float(cubic > 0.05)));
+	wl4 = max(wl4 - zero, lerp(0.0,lerp(-0.08, -0.000, fp1),float(cubic > 0.05)));
 	wl3 = max(wl3 - zero, lerp(0.0,lerp(-0.20, -0.080, fp1),float(cubic > 0.05)));
 	wl2 = max(wl2 - zero, 0.0);
 	wl1 = max(wl1 - zero, 0.0);
 	wr1 = max(wr1 - zero, 0.0);	
 	wr2 = max(wr2 - zero, 0.0);	
 	wr3 = max(wr3 - zero, lerp(0.0,lerp(-0.20, -0.080, 1.-fp1),float(cubic > 0.05)));
-	wr4 = max(wr4 - zero, lerp(0.0,lerp(-0.10, -0.010, 1.-fp1),float(cubic > 0.05)));
+	wr4 = max(wr4 - zero, lerp(0.0,lerp(-0.08, -0.000, 1.-fp1),float(cubic > 0.05)));
 
 	float wtt =  1.0/(wl4+wl3+wl2+wl1+wr1+wr2+wr3+wr4);
 	float wts =  1.0/(sl4+sl3+sl2+sl1+sr1+sr2+sr3+sr4);
@@ -156,8 +156,8 @@ float4 PS_FRAGMENT (in out_vertex VAR) : COLOR
 	
 	float3 color1 = (wl4*l4+wl3*l3+wl2*l2+wl1*l1+wr1*r1+wr2*r2+wr3*r3+wr4*r4)*wtt;
 	
-	float3 colmin = min(min(l3,l1),min(r1,r3));
-	float3 colmax = max(max(l3,l1),max(r1,r3));
+	float3 colmin = min(min(l3,l1),min(r1,r3)); colmin = min(colmin, min(l2,r2));
+	float3 colmax = max(max(l3,l1),max(r1,r3)); colmax = max(colmax, max(l2,r2));
 	
 	if (cubic > 0.05) color1 = clamp(color1, colmin, colmax);
 	
@@ -181,8 +181,8 @@ float4 PS_FRAGMENT (in out_vertex VAR) : COLOR
 	
 	float3 color2 = (wl4*l4+wl3*l3+wl2*l2+wl1*l1+wr1*r1+wr2*r2+wr3*r3+wr4*r4)*wtt;
 	
-	colmin = min(min(l3,l1),min(r1,r3));
-	colmax = max(max(l3,l1),max(r1,r3));
+	colmin = min(min(l3,l1),min(r1,r3)); colmin = min(colmin, min(l2,r2));
+	colmax = max(max(l3,l1),max(r1,r3)); colmax = max(colmax, max(l2,r2));
 	
 	if (cubic > 0.05) color2 = clamp(color2, colmin, colmax);
 	
@@ -218,8 +218,8 @@ float4 PS_FRAGMENT (in out_vertex VAR) : COLOR
 	color1*=lerp(brightboost1, brightboost2, max(max(color1.r,color1.g),color1.b));
 	color2*=lerp(brightboost1, brightboost2, max(max(color2.r,color2.g),color2.b));
 
-	color1 = min(color1, 1.05);
-	color2 = min(color2, 1.05);
+	color1 = saturate(color1);
+	color2 = saturate(color2);
 
 	color = w1*color1 + w2*color2;
 	float3 w3 = w1 + w2;

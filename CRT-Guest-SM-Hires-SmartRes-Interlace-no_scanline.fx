@@ -113,7 +113,7 @@ float4 PS_FRAGMENT (in out_vertex VAR) : COLOR
 
 	float3 color = (l3*wl3 + l2*wl2 + l1*wl1 + r1*wr1 + r2*wr2 + r3*wr3)*wt;
 	
-	color = min(color,1.0);	
+	color = saturate(color);	
 	
     return float4(sqrt(color), 1.0);	
 }

@@ -152,7 +152,7 @@ float4 PS_FRAGMENT (in out_vertex VAR) : COLOR
 	float3 color = color1*w1 + color2*w2;
 
 	if(ir.y > 1.0) color = (w1+w2)*color1;
-	color = min(color,1.0);	
+	color = saturate(color);	
 
 	color = pow(color, float3(0.55, 0.55, 0.55));
 	

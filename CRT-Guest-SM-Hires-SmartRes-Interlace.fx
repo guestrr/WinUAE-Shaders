@@ -54,7 +54,7 @@ texture WorkingTexture          : WORKINGTEXTURE;
 sampler	decal = sampler_state
 {
 	Texture	  = (SourceTexture);
-	MinFilter = POINT;
+	MinFilter = LINEAR;
 	MagFilter = LINEAR;
 };
 
@@ -71,7 +71,7 @@ out_vertex  VS_VERTEX(float3 position : POSITION, float2 texCoord : TEXCOORD0 )
 	out_vertex OUT = (out_vertex)0;
 
 	OUT.position = mul(float4(position,1.0),WorldViewProjection);
-	OUT.t0 = texCoord;
+	OUT.t0 = texCoord * 1.000001;
 	return OUT;  
 }
 
@@ -121,9 +121,9 @@ float4 PS_FRAGMENT (in out_vertex VAR) : COLOR
 	float2 OGL2Pos = VAR.t0 / ps - float2(0.5,0.5);
 	float2 fp = frac(OGL2Pos);
 	float2 dx = float2(ps.x,0.0);
-	float2 dy = float2(0.0, 0.5*ps.y);
+	float2 dy = float2(0.0,ps.y);
 	
-	float2 pC4 = floor(OGL2Pos) * ps + 0.5*ps;	
+	float2 pC4 = floor(OGL2Pos) * ps + 0.5*ps;
 	
 	if (ir.y > 1.0) pC4.y = VAR.t0.y;
 	
@@ -175,7 +175,6 @@ float4 PS_FRAGMENT (in out_vertex VAR) : COLOR
 	
 	float f1 = fp.y;
 	float f2 = 1.0 - fp.y;
-	float f3 = frac(VAR.t0.y / ps.y); f3 = abs(f3-0.5);
 	
 	float3 color;
 	float t1 = st(f1);
@@ -185,14 +184,13 @@ float4 PS_FRAGMENT (in out_vertex VAR) : COLOR
 	
 	float scan1 = lerp(scanline1, scanline2, f1);
 	float scan2 = lerp(scanline1, scanline2, f2);
-	float scan0 = lerp(scanline1, scanline2, f3);
-	f3 = st1(f3,scan0);
-	f3 = f3*f3*(3.0-2.0*f3);
 	
 	float3 sctemp = (t1*scolor1 + t2*scolor2)/(t1+t2);
 	
 	float3 ref1 = lerp(sctemp, scolor1, s_beam);
 	float3 ref2 = lerp(sctemp, scolor2, s_beam);	
+
+	if(ir.y > 1.0) { ref2 = ref1 = scolor1; }
 	
 	float3 w1, w2 = float3(0.0,0.0,0.0);
 
@@ -210,21 +208,21 @@ float4 PS_FRAGMENT (in out_vertex VAR) : COLOR
 	color1*=lerp(brightboost1, brightboost2, max(max(color1.r,color1.g),color1.b));
 	color2*=lerp(brightboost1, brightboost2, max(max(color2.r,color2.g),color2.b));
 
-	color1 = min(color1, 1.05);
-	color2 = min(color2, 1.05);
+	color1 = min(color1, 1.0);
+	color2 = min(color2, 1.0);
 
 	color = w1*color1 + w2*color2;
 	float3 w3 = w1+w2;
 	
 	if(ir.y > 1.0) color = (w1+w2)*color1;
-	color = min(color,1.0);	
+	color = saturate(color);	
 	
 	float3 color1g = pow(color, float3(1.0,1.0,1.0)/2.1);
 
 	if (!(stype == 1.0))
 	{
 		float3 color2g = pow(color, float3(1.0,1.0,1.0)/gamma_out);			
-		float mx1 = max(max(color1g.r,color1g.g),color1g.b) + 1e-12;	
+		float mx1 = max(max(max(color1g.r,color1g.g),color1g.b), 1e-8);	
 		float mx2 = max(max(color2g.r,color2g.g),color2g.b);
 		color1g*=mx2/mx1;		
 	}
